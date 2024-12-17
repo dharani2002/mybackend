@@ -4,4 +4,4 @@
 
 *.env
 .env
-.enc.*
+.env.*

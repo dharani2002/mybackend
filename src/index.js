@@ -1,12 +1,20 @@
 import dotenv from "dotenv"
-import connectDB from "./db/index.js";
-
+import connectDB from "./db/index.js";//always import with full file name along with its extention
+// the dotenv config path provided, the experimental featyure must be enabled in package.json to enable import format pof dotenv
 dotenv.config({
     path:"./env"
 })
 
-connectDB()
+connectDB()// we prvovide a prmoise after connectDB to connect to epress
+.then(()=>{
+    app.listen(process.env.PORT || 8000, ()=>{
+        console.log(`Server is running at port: ${process.env.PORT}`);
 
+    })
+})
+.catch((err)=>{
+    console.log("MONGODB connection failed !!!", err)
+})
 
 
 
