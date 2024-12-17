@@ -1,5 +1,6 @@
 import dotenv from "dotenv"
 import connectDB from "./db/index.js";//always import with full file name along with its extention
+import {app} from "./app.js"
 // the dotenv config path provided, the experimental featyure must be enabled in package.json to enable import format pof dotenv
 dotenv.config({
     path:"./env"
