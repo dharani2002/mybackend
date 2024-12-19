@@ -3,7 +3,7 @@ import connectDB from "./db/index.js";//always import with full file name along 
 import {app} from "./app.js"
 // the dotenv config path provided, the experimental featyure must be enabled in package.json to enable import format pof dotenv
 dotenv.config({
-    path:"./env"
+    path:"./.env"
 })
 
 connectDB()// we prvovide a prmoise after connectDB to connect to epress
