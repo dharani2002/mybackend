@@ -165,8 +165,8 @@ const logoutUser =asyncHandler(async (req,res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set:{
-                refreshToken: undefined
+            $unset:{
+                refreshToken: 1
             }
         },
         {
@@ -193,7 +193,7 @@ const logoutUser =asyncHandler(async (req,res) => {
 //that will refresh, we will now write the endpoint of that request
 const refreshAccessToken=asyncHandler(async (req,res) => {
         const incomingRefreshToken=req.cookies.refreshToken|| req.body.refreshToken
-    
+        //console.log(incomingRefreshToken)
         if(!incomingRefreshToken){
             throw new ApiError(401, "Unauthorized Request")
         }
@@ -207,6 +207,7 @@ const refreshAccessToken=asyncHandler(async (req,res) => {
             if(!user){
                 throw new ApiError(401,"invalid refresh token")
             }
+            //console.log(user.refreshToken)
             if(incomingRefreshToken !== user?.refreshToken){
                 throw new ApiError(401, "Refresh token is expired or used")
             }
@@ -216,16 +217,18 @@ const refreshAccessToken=asyncHandler(async (req,res) => {
                 secure:true
             }
     
-            const {accessToken,newRefreshToken}=await generateAccessAndRefreshToken(user._id)
+            const {accessToken,refreshToken}=await generateAccessAndRefreshToken(user._id)
+            //console.log(accessToken)
+            //console.log(refreshToken)
     
             return res
             .status(200)
             .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", newRefreshToken, options)
+            .cookie("refreshToken", refreshToken, options)
             .json(
                 new ApiResponse(
                     200,
-                    {accessToken,newRefreshToken},
+                    {accessToken,refreshToken},
                     "Access token refreshed"
                 )
             )
@@ -239,6 +242,9 @@ const refreshAccessToken=asyncHandler(async (req,res) => {
 
 const changeCurrentPassword= asyncHandler(async (req,res) => {
     const {oldPassword, newPassword}=req.body
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "All fields are required")
+    }
 
     const user= await User.findById(req.user?._id)
     const isPasswordCorrect=await user.isPasswordCorrect(oldPassword)
