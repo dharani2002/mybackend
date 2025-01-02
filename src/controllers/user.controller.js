@@ -6,20 +6,20 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 
-const generateAccessAndRefreshToken= async(userId)=>{
-    try{
-        const user=await User.findById(userId)
-        const accessToken=user.generateAccessToken()
-        const refreshToken=user.generateRefreshToken()
+const generateAccessAndRefreshToken = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
         //console.log(accessToken)
 
-        user.refreshToken=refreshToken
-        await user.save({validateBeforeSave:false})
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
 
-        return {accessToken,refreshToken}
+        return { accessToken, refreshToken }
 
-    }catch(error){
-        throw new ApiError(500,"Something went wrong while generating access and refresh token")
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating access and refresh token")
     }
 }
 
@@ -301,7 +301,7 @@ const updateUserAvatar=asyncHandler(async (req,res) => {
     const avatar= await uploadOnCoudinary(avatarLocalPath)
 
     if(!avatar){
-        throw new ApiError(400,"Error while uploading error")
+        throw new ApiError(400,"Error while uploading file")
     }
 
     const user= await User.findByIdAndUpdate(
