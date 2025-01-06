@@ -59,7 +59,7 @@ const deleteTweet=asyncHandler(async (req,res) => {
 
     return res
     .status(200)
-    .json(200,{},"tweet deletd successfully")
+    .json(200,{},"tweet deleted successfully")
 })
 
 export {
