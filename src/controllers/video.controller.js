@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import {Video} from "../models/video.model.js"
-//import {User} from "../models/user.model.js"
+import {User} from "../models/user.model.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCoudinary } from "../utils/cloudinary.js";
@@ -79,46 +79,79 @@ const getVideoById=asyncHandler(async (req,res) => {
     .json(new ApiResponse(200,video,"video fetched successfully"))
 })
 
-// const getAllVideos=asyncHandler(async (req,res) => {
-//     const {page=1,limit=10,query,sortBy, sortType}=req.query
+const getAllVideos=asyncHandler(async (req,res) => {
+    const {page=1,limit=10,query,sortBy, sortType}=req.query
     
-//     const user=await User.find({
-//         refreshToken:req.cookies.refreshToken,
-//     })
+    const pageNumber=parseInt(page)
+    const limitOfComments=parseInt(limit)
 
-//     if (!user) {
-//         throw new ApiError(400, "user is required")
-//     }
+    const skip=(pageNumber-1)*limitOfComments;
+    const pageSize=limitOfComments;
 
-//     const pageNumber=parseInt(page)
-//     const limitOfComments=parseInt(limit)
+    const videos=await Video.aggregatePaginate(
+        Video.aggregate([
+            {
+                $match:{
+                    $or:[
+                        {title:{$regex:query,$options:"i"}},
+                        {description:{$regex:query,$options:"i"}}
+                    ],
+                    isPublished:true,
+                    owner:req.user._id
+                }
+            },
+            {
+                $lookup:{
+                    from:"likes",
+                    localField:"_id",
+                    foreignField:"video",
+                    as:"likes"
+                }
+            },
+            {
+                $addFields:{
+                    likes:{$size:"$likes"}
+                }
+            },
+            {
+                $project:{
+                    "_id":1,
+                    "videoFile":1,
+                    "thumbnail":1,
+                    "title":1,
+                    "description":1,
+                    "duration": 1,
+                    "views": 1,
+                    "isPublished": 1,
+                    "owner": 1,
+                    "createdAt": 1,
+                    "updatedAt": 1,
+                    "likes": 1
+                }
+            },
+            {
+                $sort:{[sortBy]:sortType==="asc"?1:-1}
+            },
+            {
+                $skip:skip
+            },
+            {
+                $limit:pageSize
+            }
+        ])
+    )
 
-//     const skip=(pageNumber-1)*limitOfComments;
-//     const pageSize=limitOfComments;
+    if(videos.length===0){
+        throw new ApiError(400,"video not found")
+    }
 
-//     const videos=await Video.aggregatePaginate(
-//         Video.aggregate([
-//             {
-//                 $match:{
-//                     $or:[
-//                         {title:{$regex:query,$options:"i"}},
-//                         {description:{$regex:query,$options:"i"}}
-//                     ],
-//                     isPublished:true,
-//                     owner:user._id
-//                 }
-//             },
-//             {
-//                 $lookup:{
-//                     from:"likes",
-//                     localField:""
-//                 }
-//             }
-//         ])
-//     )
-
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,videos,"no video available")
+    )
     
-// })
+})
 
 
 const updateVideoDetails=asyncHandler(async (req,res) => {
@@ -206,4 +239,5 @@ export {
     updateVideoDetails,
     deleteVideo,
     togglePublishStatus,
+    getAllVideos
 }
